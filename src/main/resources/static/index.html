@@ -40,248 +40,250 @@
                 <h1 class="text-2xl font-bold tracking-tight bg-gradient-to-r from-teal-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent flex items-center gap-2">
                     <i data-lucide="cpu" class="text-teal-400 w-7 h-7"></i> Synapse Helpdesk
                 </h1>
-                <p class="text-xs text-slate-400">Ecossistema de Suporte TÃ©cnico Inteligente & RAG NÃ­vel 1</p>
+                <p class="text-xs text-slate-400">Ecossistema de Suporte Técnico Inteligente & RAG Nível 1</p>
             </div>
             
             <div class="flex flex-wrap items-center gap-3">
                 <button @click="seedDatabase" class="px-4 py-2 text-xs font-semibold rounded-lg bg-indigo-600/30 text-indigo-300 border border-indigo-500/20 hover:bg-indigo-600/50 hover:border-indigo-500/40 transition flex items-center gap-2">
-                    <i data-lucide="database" class="w-4 h-4"></i> Popular Banco (Mock Data)
+                    <i data-lucide="database" class="w-4 h-4"></i> Recarregar Dados Base
                 </button>
                 <button @click="showArticleModal = true" class="px-4 py-2 text-xs font-semibold rounded-lg bg-teal-600/30 text-teal-300 border border-teal-500/20 hover:bg-teal-600/50 hover:border-teal-500/40 transition flex items-center gap-2">
                     <i data-lucide="plus-circle" class="w-4 h-4"></i> Novo Artigo RAG
                 </button>
                 <div class="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-xs text-slate-400 flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    Hugging Face: <span class="font-semibold text-slate-200">falcon-7b</span>
+                    RAG Inteligente: <span class="font-semibold text-slate-200">Ativado</span>
                 </div>
             </div>
         </header>
 
-        <!-- TOP GRID -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+        <!-- TAB NAVIGATION -->
+        <nav class="flex gap-4 border-b border-white/5 pb-2">
+            <button @click="activeTab = 'tickets'" :class="['px-4 py-2 text-sm font-semibold tab-btn flex items-center gap-2', activeTab === 'tickets' ? 'text-teal-400 active' : 'text-slate-400 hover:text-slate-200']">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> Painel de Chamados
+            </button>
+            <button @click="activeTab = 'novo'" :class="['px-4 py-2 text-sm font-semibold tab-btn flex items-center gap-2', activeTab === 'novo' ? 'text-teal-400 active' : 'text-slate-400 hover:text-slate-200']">
+                <i data-lucide="ticket-plus" class="w-4 h-4"></i> Abrir Novo Chamado
+            </button>
+        </nav>
+
+        <!-- TAB 1: TICKETS DASHBOARD VIEW -->
+        <div v-show="activeTab === 'tickets'" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
             
-            <!-- COLUMN 1: NEW TICKET PORTAL (Left) -->
-            <div class="lg:col-span-4 glass-panel p-6 flex flex-col justify-between space-y-4">
-                <div>
-                    <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-semibold text-slate-200 flex items-center gap-2">
-                            <i data-lucide="ticket-plus" class="text-teal-400 w-5 h-5"></i> Abrir Novo Chamado
-                        </h2>
-                        <span class="text-xs text-slate-500">Inputs em Tempo Real</span>
-                    </div>
-
-                    <div class="space-y-4">
-                        <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1.5">UsuÃ¡rio Solicitante</label>
-                            <select v-model="newTicket.clienteId" class="w-full bg-slate-900/60 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-teal-500/50 transition">
-                                <option :value="null" disabled>Selecione um usuÃ¡rio...</option>
-                                <option v-for="user in users" :key="user.id" :value="user.id">
-                                    {{ user.nome }} ({{ user.tipo }})
-                                </option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1.5">TÃ­tulo do Problema</label>
-                            <input type="text" v-model="newTicket.titulo" placeholder="Ex: VirtualBox nÃ£o liga VM" 
-                                   class="w-full bg-slate-900/60 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-teal-500/50 transition placeholder-slate-600">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-400 mb-1.5">DescriÃ§Ã£o Detalhada</label>
-                            <textarea v-model="newTicket.descricao" rows="4" placeholder="Descreva os erros e sintomas..." 
-                                      class="w-full bg-slate-900/60 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-teal-500/50 transition placeholder-slate-600"></textarea>
-                        </div>
-                    </div>
-                </div>
-                <div class="pt-4">
-                    <button @click="submitTicket" :disabled="isAnalyzing || !newTicket.clienteId || !newTicket.titulo"
-                            class="w-full py-3 px-4 rounded-lg bg-gradient-to-r from-teal-500 to-indigo-600 font-semibold text-sm hover:from-teal-400 hover:to-indigo-500 transition shadow-lg shadow-teal-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-                        <i v-if="isAnalyzing" class="animate-spin" data-lucide="loader"></i>
-                        <i v-else data-lucide="zap"></i>
-                        {{ isAnalyzing ? 'Processando Triagem IA...' : 'Enviar e Triar com IA' }}
-                    </button>
-                </div>
-            </div>
-
-            <!-- COLUMN 2: AI TRIAGE HUB (Center) -->
-            <div class="lg:col-span-5 glass-panel p-6 flex flex-col items-center justify-between min-h-[400px]">
-                <div class="w-full flex justify-between items-center border-b border-white/5 pb-3">
-                    <h2 class="text-sm font-semibold tracking-wider uppercase text-slate-400 flex items-center gap-1.5">
-                        <i data-lucide="activity" class="text-purple-400 w-4 h-4"></i> AI Triage Hub
+            <!-- LEFT PANEL: TICKET LIST (4 columns - High Visibility) -->
+            <div class="lg:col-span-4 glass-panel p-6 flex flex-col space-y-4">
+                <div class="flex justify-between items-center border-b border-white/5 pb-3">
+                    <h2 class="text-base font-semibold text-slate-200 flex items-center gap-2">
+                        <i data-lucide="list" class="text-indigo-400 w-5 h-5"></i> Chamados Ativos
                     </h2>
-                    <span class="text-[10px] bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded">Real-time Analysis</span>
-                </div>
-                <div :class="['ai-orb-container', isAnalyzing ? 'processing' : '']" class="my-6">
-                    <div class="ai-orb-glow"></div>
-                    <div class="ai-orb-ring-2"></div>
-                    <div class="ai-orb-ring"></div>
-                    <div class="ai-orb-core"></div>
-                </div>
-                <div class="w-full bg-slate-900/40 border border-white/5 rounded-xl p-4 flex justify-around gap-4 text-center">
-                    <div>
-                        <div class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Categoria IA</div>
-                        <div class="mt-1 text-sm font-bold text-teal-300 glow-text-teal">
-                            {{ lastTriagem.categoria || 'Aguardando Ticket' }}
-                        </div>
-                    </div>
-                    <div class="w-[1px] bg-white/5"></div>
-                    <div>
-                        <div class="text-[10px] uppercase font-semibold text-slate-400 tracking-wider">Prioridade IA</div>
-                        <div class="mt-1 text-sm font-bold" 
-                             :class="{'text-rose-400': lastTriagem.prioridade === 'CrÃ­tica' || lastTriagem.prioridade === 'Alta', 'text-amber-400': lastTriagem.prioridade === 'MÃ©dia', 'text-emerald-400': lastTriagem.prioridade === 'Baixa', 'text-slate-400': !lastTriagem.prioridade}">
-                            {{ lastTriagem.prioridade || 'Aguardando Ticket' }}
-                        </div>
-                    </div>
-                </div>
-            </div>            <!-- COLUMN 3: KNOWLEDGE BASE RAG (Right) -->
-            <div class="lg:col-span-3 glass-panel p-6 flex flex-col justify-between">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-sm font-semibold tracking-wider uppercase text-slate-400 flex items-center gap-1.5">
-                        <i data-lucide="book-open" class="text-amber-400 w-4 h-4"></i> RAG NÃ­vel 1
-                    </h2>
-                    <span class="text-[10px] bg-amber-500/10 text-amber-300 border border-amber-500/20 px-2 py-0.5 rounded">SugestÃµes IA</span>
-                </div>
-                <div class="kb-card-stack my-4">
-                    <div v-if="ragSuggestion" class="kb-card glass-panel bg-slate-900/80 p-4 border border-teal-500/20 shadow-lg shadow-teal-500/5">
-                        <h3 class="text-xs font-bold text-teal-400 flex items-center gap-1.5 mb-2">
-                            <i data-lucide="sparkles" class="w-3.5 h-3.5"></i> ResoluÃ§Ã£o Recomendada
-                        </h3>
-                        <p class="text-xs leading-relaxed text-slate-300 overflow-y-auto max-h-[110px]">
-                            {{ ragSuggestion }}
-                        </p>
-                    </div>
-                    <div v-else class="kb-card glass-panel bg-slate-900/30 p-8 border border-dashed border-white/10 flex flex-col items-center justify-center text-center">
-                        <i data-lucide="help-circle" class="w-8 h-8 text-slate-600 mb-2"></i>
-                        <p class="text-xs text-slate-500 font-medium">Nenhum chamado aberto ainda para receber RAG.</p>
-                    </div>
-                    <div class="kb-card glass-panel bg-slate-900/40 p-4 -mt-2 scale-95 opacity-50 pointer-events-none"></div>
-                    <div class="kb-card glass-panel bg-slate-900/20 p-4 -mt-4 scale-90 opacity-20 pointer-events-none"></div>
-                </div>
-                <div class="text-[10px] text-slate-500 text-center italic">
-                    A IA formula respostas automÃ¡ticas baseando-se em artigos de soluÃ§Ãµes correspondentes do banco.
-                </div>
-            </div>
-
-        </div>
-
-        <!-- TICKETS LIST & TIMELINE HISTORY SECTION -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            
-            <!-- COLUMN 1: OPEN TICKETS LIST -->
-            <div class="lg:col-span-4 glass-panel p-6 space-y-4">
-                <h3 class="text-base font-semibold text-slate-200 border-b border-white/5 pb-2 flex items-center justify-between">
-                    <span class="flex items-center gap-2"><i data-lucide="list" class="text-indigo-400 w-5 h-5"></i> Chamados Ativos</span>
-                    <span class="text-xs bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded">
-                        {{ tickets.length }}
+                    <span class="text-xs bg-indigo-500/10 text-indigo-300 border border-indigo-500/20 px-2.5 py-0.5 rounded-full font-bold">
+                        {{ filteredTickets.length }}
                     </span>
-                </h3>
-                <div class="space-y-3 overflow-y-auto max-h-[400px] pr-1">
-                    <div v-for="t in tickets" :key="t.id" @click="selectTicket(t)"
-                         :class="['p-3 rounded-lg border text-left cursor-pointer transition flex justify-between items-start', 
-                                  selectedTicket && selectedTicket.id === t.id ? 'bg-indigo-500/10 border-indigo-500/50 shadow-md shadow-indigo-500/5' : 'bg-slate-900/40 border-white/5 hover:border-white/10 hover:bg-slate-900/60']">
-                        <div class="space-y-1">
-                            <div class="text-xs font-semibold text-slate-300 line-clamp-1">
-                                #{{ t.id }} - {{ t.titulo }}
-                            </div>
-                            <div class="text-[10px] text-slate-500">
-                                Cliente: {{ t.cliente ? t.cliente.nome : 'N/D' }}
-                            </div>
-                            <div class="flex items-center gap-2 mt-1">
-                                <span class="text-[9px] px-1.5 py-0.5 rounded bg-white/5 text-slate-400 font-semibold border border-white/5 uppercase">
-                                    {{ t.categoria || 'Sem categoria' }}
-                                </span>
-                                <span :class="['text-[9px] px-1.5 py-0.5 rounded font-semibold border uppercase', 
-                                               t.prioridade === 'CrÃ­tica' || t.prioridade === 'Alta' ? 'bg-rose-500/10 text-rose-300 border-rose-500/20' : t.prioridade === 'MÃ©dia' ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20']">
-                                    {{ t.prioridade || 'MÃ©dia' }}
-                                </span>
-                            </div>
-                        </div>
-                        <span :class="['text-[9px] px-1.5 py-0.5 rounded font-semibold border uppercase', 
-                                       t.status === 'ABERTO' ? 'bg-sky-500/10 text-sky-300 border-sky-500/20' : t.status === 'EM_ANDAMENTO' ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20']">
-                            {{ t.status }}
-                        </span>
+                </div>
+
+                <!-- Filters -->
+                <div class="flex gap-2">
+                    <div class="relative flex-1">
+                        <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-500"></i>
+                        <input type="text" v-model="filterText" placeholder="Buscar chamados..."
+                               class="w-full bg-slate-900/60 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-teal-500/50 placeholder-slate-600">
                     </div>
-                    <div v-if="tickets.length === 0" class="text-center py-8 text-slate-500 text-xs">
-                        Nenhum chamado registrado.
+                    <select v-model="filterStatus" class="bg-slate-900 border border-white/10 rounded-lg px-2 text-xs text-slate-300 focus:outline-none focus:border-teal-500/50">
+                        <option value="TODOS">Todos</option>
+                        <option value="ABERTO">Abertos</option>
+                        <option value="EM_ANDAMENTO">Em Progresso</option>
+                        <option value="RESOLVIDO">Resolvidos</option>
+                        <option value="FECHADO">Fechados</option>
+                    </select>
+                </div>
+
+                <!-- Tickets Scrollable Feed -->
+                <div class="space-y-3 overflow-y-auto max-h-[500px] pr-1">
+                    <div v-for="t in filteredTickets" :key="t.id" @click="selectTicket(t)"
+                         :class="['p-4 rounded-xl border text-left cursor-pointer transition flex flex-col justify-between gap-3', 
+                                  selectedTicket && selectedTicket.id === t.id ? 'bg-indigo-500/10 border-indigo-500/50 shadow-lg shadow-indigo-500/5' : 'bg-slate-900/40 border-white/5 hover:border-white/10 hover:bg-slate-900/60']">
+                        
+                        <div class="flex justify-between items-start gap-2">
+                            <span class="text-[10px] font-bold text-slate-500 tracking-wider">#{{ t.id }}</span>
+                            <span :class="['text-[9px] px-2 py-0.5 rounded-full font-bold border uppercase', 
+                                           t.status === 'ABERTO' ? 'bg-sky-500/10 text-sky-300 border-sky-500/20' : 
+                                           t.status === 'EM_ANDAMENTO' ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : 
+                                           'bg-emerald-500/10 text-emerald-300 border-emerald-500/20']">
+                                {{ t.status === 'EM_ANDAMENTO' ? 'Em Progresso' : t.status }}
+                            </span>
+                        </div>
+
+                        <div class="space-y-1">
+                            <h4 class="text-xs font-bold text-slate-200 line-clamp-1">{{ t.titulo }}</h4>
+                            <p class="text-[10px] text-slate-400 line-clamp-2">{{ t.descricao }}</p>
+                        </div>
+
+                        <div class="flex items-center justify-between border-t border-white/5 pt-2 text-[10px] text-slate-500">
+                            <span>Solicitado por: <strong class="text-slate-300">{{ t.cliente.nome }}</strong></span>
+                            <span class="flex items-center gap-1"><i data-lucide="clock" class="w-3 h-3"></i> {{ formatDateTime(t.dataCriacao) }}</span>
+                        </div>
+
+                        <div class="flex flex-wrap gap-2">
+                            <span class="text-[9px] px-2 py-0.5 rounded bg-white/5 text-slate-300 border border-white/5 font-semibold">
+                                {{ t.categoria || 'Não Categorizado' }}
+                            </span>
+                            <span :class="['text-[9px] px-2 py-0.5 rounded font-bold border', 
+                                           t.prioridade === 'Crítica' || t.prioridade === 'Alta' ? 'bg-rose-500/10 text-rose-300 border-rose-500/20' : 
+                                           t.prioridade === 'Média' ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : 
+                                           'bg-emerald-500/10 text-emerald-300 border-emerald-500/20']">
+                                {{ t.prioridade || 'Média' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div v-if="filteredTickets.length === 0" class="text-center py-12 text-slate-500 text-xs">
+                        Nenhum chamado corresponde aos filtros.
                     </div>
                 </div>
             </div>
 
-            <!-- COLUMN 2: TIMELINE & SUMMARY -->
+            <!-- RIGHT PANEL: DETAILED VIEW (8 columns) -->
             <div class="lg:col-span-8 flex flex-col gap-6">
-                <div class="glass-panel p-6 flex-1 flex flex-col justify-between min-h-[400px]">
-                    <div v-if="selectedTicket">
-                        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-white/5 pb-4 mb-4">
-                            <div>
-                                <span class="text-[10px] font-semibold text-slate-500">CHAMADO #{{ selectedTicket.id }}</span>
-                                <h3 class="text-base font-bold text-slate-200">{{ selectedTicket.titulo }}</h3>
-                                <p class="text-xs text-slate-400 mt-1">{{ selectedTicket.descricao }}</p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <div v-if="!selectedTicket.tecnico" class="flex gap-2">
-                                    <select @change="assignTechnician($event.target.value)" class="bg-slate-900 border border-white/10 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none">
-                                        <option value="">Atribuir TÃ©cnico...</option>
-                                        <option v-for="user in technicians" :key="user.id" :value="user.id">
-                                            {{ user.nome }}
-                                        </option>
+                
+                <!-- Ticket Detail & Timeline Panel -->
+                <div class="glass-panel p-6 flex-1 flex flex-col justify-between min-h-[480px]">
+                    <div v-if="selectedTicket" class="flex-1 flex flex-col justify-between space-y-4">
+                        
+                        <!-- Header Details -->
+                        <div>
+                            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 border-b border-white/5 pb-4">
+                                <div class="space-y-1">
+                                    <div class="flex items-center gap-2 text-[10px] text-slate-500 font-bold tracking-wider">
+                                        <span>CHAMADO #{{ selectedTicket.id }}</span>
+                                        <span>•</span>
+                                        <span class="flex items-center gap-1"><i data-lucide="calendar" class="w-3.5 h-3.5"></i> Aberto em {{ formatDateTime(selectedTicket.dataCriacao) }}</span>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-slate-100">{{ selectedTicket.titulo }}</h3>
+                                </div>
+
+                                <!-- Actions -->
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <!-- Technician Assignment -->
+                                    <div v-if="!selectedTicket.tecnico">
+                                        <select @change="assignTechnician($event.target.value)" 
+                                                class="bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                                            <option value="">Atribuir Técnico...</option>
+                                            <option v-for="user in technicians" :key="user.id" :value="user.id">
+                                                {{ user.nome }}
+                                            </option>
+                                        </select>
+                                    </div>
+                                    <div v-else class="text-xs px-2.5 py-1.5 bg-indigo-500/10 border border-indigo-500/30 rounded text-indigo-300 font-semibold flex items-center gap-1.5">
+                                        <i data-lucide="user" class="w-3.5 h-3.5"></i> Técnico: {{ selectedTicket.tecnico.nome }}
+                                    </div>
+
+                                    <!-- Status changer -->
+                                    <select v-model="selectedTicket.status" @change="updateStatus" 
+                                            class="bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+                                        <option value="ABERTO">Aberto</option>
+                                        <option value="EM_ANDAMENTO">Em Progresso</option>
+                                        <option value="RESOLVIDO">Resolvido</option>
+                                        <option value="FECHADO">Fechado</option>
                                     </select>
                                 </div>
-                                <div v-else class="text-xs px-2 py-1 bg-white/5 border border-white/10 rounded text-slate-300 font-semibold">
-                                    TÃ©c: {{ selectedTicket.tecnico.nome }}
+                            </div>
+
+                            <!-- Metadata info grid -->
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 bg-slate-900/40 border-b border-white/5 p-4 rounded-xl mt-4">
+                                <div>
+                                    <span class="text-[10px] text-slate-500 uppercase font-semibold">Categoria</span>
+                                    <div class="text-xs font-bold text-slate-300 mt-0.5">{{ selectedTicket.categoria || 'Não definida' }}</div>
                                 </div>
-                                <select v-model="selectedTicket.status" @change="updateStatus" class="bg-slate-900 border border-white/10 rounded px-2 py-1 text-xs text-slate-300 focus:outline-none">
-                                    <option value="ABERTO">Aberto</option>
-                                    <option value="EM_ANDAMENTO">Em Andamento</option>
-                                    <option value="RESOLVIDO">Resolvido</option>
-                                    <option value="FECHADO">Fechado</option>
-                                </select>
+                                <div>
+                                    <span class="text-[10px] text-slate-500 uppercase font-semibold">Prioridade</span>
+                                    <div class="text-xs font-bold mt-0.5" 
+                                         :class="{'text-rose-400': selectedTicket.prioridade === 'Crítica' || selectedTicket.prioridade === 'Alta', 'text-amber-400': selectedTicket.prioridade === 'Média', 'text-emerald-400': selectedTicket.prioridade === 'Baixa'}">
+                                        {{ selectedTicket.prioridade || 'Média' }}
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-500 uppercase font-semibold">Solicitante</span>
+                                    <div class="text-xs font-bold text-slate-300 mt-0.5">{{ selectedTicket.cliente.nome }}</div>
+                                </div>
+                                <div>
+                                    <span class="text-[10px] text-slate-500 uppercase font-semibold">Status</span>
+                                    <div class="text-xs font-bold text-slate-300 mt-0.5">{{ selectedTicket.status }}</div>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="space-y-3 overflow-y-auto max-h-[220px] pr-1 mb-4">
-                            <div class="p-3 rounded-lg bg-slate-900/60 border border-white/5">
-                                <div class="flex justify-between items-center text-[10px] text-slate-500 font-semibold mb-1">
-                                    <span>{{ selectedTicket.cliente.nome }} (CLIENTE)</span>
-                                    <span>Problema Original</span>
+                        <!-- Timeline interactions feed -->
+                        <div class="flex-1 space-y-4 overflow-y-auto max-h-[250px] pr-1 py-2">
+                            <!-- Ticket description itself as starting conversation bubble -->
+                            <div class="flex items-start gap-2.5">
+                                <div class="w-8 h-8 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-xs font-bold text-slate-400">
+                                    {{ selectedTicket.cliente.nome.charAt(0) }}
                                 </div>
-                                <p class="text-xs text-slate-300">{{ selectedTicket.descricao }}</p>
+                                <div class="bg-slate-900/80 border border-white/5 rounded-2xl rounded-tl-none p-3.5 max-w-[85%]">
+                                    <div class="flex justify-between items-center text-[10px] text-slate-500 font-semibold mb-1">
+                                        <span>{{ selectedTicket.cliente.nome }} (Cliente)</span>
+                                        <span>Descrição Original</span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 leading-relaxed">{{ selectedTicket.descricao }}</p>
+                                </div>
                             </div>
-                            <div v-for="i in interactions" :key="i.id" 
-                                 :class="['p-3 rounded-lg border', 
-                                          i.autor.email === 'suporte.virtual@synapse.com' ? 'bg-teal-500/5 border-teal-500/20' : 
-                                          i.autor.tipo === 'TECNICO' ? 'bg-indigo-500/5 border-indigo-500/10' : 'bg-slate-900/30 border-white/5']">
-                                <div class="flex justify-between items-center text-[10px] font-semibold mb-1"
-                                     :class="{'text-teal-400': i.autor.email === 'suporte.virtual@synapse.com', 'text-indigo-400': i.autor.tipo === 'TECNICO', 'text-slate-400': i.autor.tipo === 'CLIENTE'}">
-                                    <span>{{ i.autor.nome }} ({{ i.autor.tipo }})</span>
-                                    <span class="text-[9px] text-slate-500">{{ formatDateTime(i.dataCriacao) }}</span>
+
+                            <!-- Messages thread list -->
+                            <div v-for="i in interactions" :key="i.id" class="flex items-start gap-2.5"
+                                 :class="{'flex-row-reverse': i.autor.email !== selectedTicket.cliente.email && i.autor.email !== 'suporte.virtual@synapse.com'}">
+                                
+                                <div class="w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold"
+                                     :class="[i.autor.email === 'suporte.virtual@synapse.com' ? 'bg-teal-500/20 border-teal-500/30 text-teal-300' : 
+                                              i.autor.tipo === 'TECNICO' ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-300' : 
+                                              'bg-slate-800 border-white/10 text-slate-400']">
+                                    {{ i.autor.nome.charAt(0) }}
                                 </div>
-                                <p class="text-xs text-slate-300">{{ i.mensagem }}</p>
+
+                                <div class="rounded-2xl p-3.5 max-w-[85%] border"
+                                     :class="[i.autor.email === 'suporte.virtual@synapse.com' ? 'bg-teal-500/5 border-teal-500/10 rounded-tl-none' : 
+                                              i.autor.tipo === 'TECNICO' ? 'bg-indigo-500/5 border-indigo-500/10 rounded-tr-none' : 
+                                              'bg-slate-900/60 border-white/5 rounded-tl-none']">
+                                    <div class="flex justify-between items-center text-[10px] font-semibold mb-1 gap-8"
+                                         :class="{'text-teal-400': i.autor.email === 'suporte.virtual@synapse.com', 'text-indigo-400': i.autor.tipo === 'TECNICO', 'text-slate-400': i.autor.tipo === 'CLIENTE'}">
+                                        <span>{{ i.autor.nome }} ({{ i.autor.tipo === 'TECNICO' ? 'Técnico' : 'Cliente' }})</span>
+                                        <span class="text-[9px] text-slate-500 font-medium">{{ formatDateTime(i.dataCriacao) }}</span>
+                                    </div>
+                                    <p class="text-xs text-slate-300 leading-relaxed">{{ i.mensagem }}</p>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="flex gap-2">
+                        <!-- Typing area -->
+                        <div class="flex gap-2 border-t border-white/5 pt-4">
                             <input type="text" v-model="newMessage" @keyup.enter="sendMessage" placeholder="Digite uma resposta..."
-                                   class="flex-1 bg-slate-900/60 border border-white/10 rounded-lg px-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-indigo-500/50">
-                            <select v-model="activeAuthorId" class="bg-slate-900 border border-white/10 rounded-lg px-2 text-xs text-slate-400 focus:outline-none">
+                                   class="flex-1 bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500/50">
+                            
+                            <!-- Toggle who is responding -->
+                            <select v-model="activeAuthorId" class="bg-slate-900 border border-slate-700/80 rounded-lg px-2 text-xs text-slate-400 focus:outline-none">
                                 <option :value="selectedTicket.cliente.id">Como Cliente</option>
-                                <option v-if="selectedTicket.tecnico" :value="selectedTicket.tecnico.id">Como TÃ©cnico</option>
+                                <option v-if="selectedTicket.tecnico" :value="selectedTicket.tecnico.id">Como Técnico</option>
                             </select>
+
                             <button @click="sendMessage" class="px-4 py-2 bg-indigo-600 rounded-lg hover:bg-indigo-500 transition text-xs font-semibold">
                                 Enviar
                             </button>
                         </div>
                     </div>
-                    <div v-else class="flex-1 flex flex-col items-center justify-center text-center text-slate-500 space-y-2 py-12">
-                        <i data-lucide="ticket" class="w-12 h-12 text-slate-700"></i>
-                        <p class="text-sm font-medium">Selecione um chamado da lista para ver o histÃ³rico e interagir.</p>
+
+                    <!-- Placeholder empty state -->
+                    <div v-else class="flex-1 flex flex-col items-center justify-center text-center text-slate-500 space-y-2 py-16">
+                        <i data-lucide="layout-dashboard" class="w-14 h-14 text-slate-700 animate-pulse"></i>
+                        <p class="text-sm font-semibold">Nenhum chamado selecionado</p>
+                        <p class="text-xs text-slate-600 max-w-xs">Selecione um dos chamados da lista lateral para visualizar a linha do tempo e os resumos de IA.</p>
                     </div>
                 </div>
 
-                <!-- LLM LONG THREAD SUMMARY -->
+                <!-- LLM LONG THREAD SUMMARY (Highlighted bottom card) -->
                 <div v-if="selectedTicket" class="glass-panel p-6 border-l-4 border-l-purple-500 bg-gradient-to-r from-purple-500/5 to-transparent relative overflow-hidden">
                     <div class="absolute -right-4 -bottom-4 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
                     <div class="flex justify-between items-start mb-3">
                         <h4 class="text-sm font-semibold text-purple-300 flex items-center gap-1.5">
-                            <i data-lucide="sparkles" class="w-4 h-4"></i> IA Resume o HistÃ³rico
+                            <i data-lucide="sparkles" class="w-4 h-4"></i> IA Resume o Histórico
                         </h4>
                         <button @click="getSummary" :disabled="isSummarizing"
                                 class="text-[10px] font-semibold text-purple-400 hover:text-purple-300 transition flex items-center gap-1">
@@ -291,7 +293,97 @@
                     </div>
                     <div class="text-xs text-slate-300 leading-relaxed">
                         <p v-if="summaryText">{{ summaryText }}</p>
-                        <p v-else class="text-slate-500 italic">Clique no botÃ£o para gerar um resumo inteligente da conversa utilizando IA.</p>
+                        <p v-else class="text-slate-500 italic">Clique no botão para gerar um resumo inteligente da conversa utilizando Inteligência Artificial.</p>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- TAB 2: CREATE NEW TICKET VIEW (Form + Orb side by side) -->
+        <div v-show="activeTab === 'novo'" class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch">
+            
+            <!-- Creation form (Left - 5 columns) -->
+            <div class="lg:col-span-5 glass-panel p-6 flex flex-col justify-between space-y-4">
+                <div>
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="text-lg font-semibold text-slate-200 flex items-center gap-2">
+                            <i data-lucide="plus-circle" class="text-teal-400 w-5 h-5"></i> Abrir Novo Chamado
+                        </h2>
+                        <span class="text-xs text-slate-500">Cadastro Simplificado</span>
+                    </div>
+
+                    <div class="space-y-4">
+                        <!-- High Contrast Client dropdown select -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Usuário Solicitante</label>
+                            <select v-model="newTicket.clienteId" 
+                                    class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-white font-medium focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition">
+                                <option :value="null" disabled class="bg-slate-900 text-slate-400 font-medium">Selecione um usuário...</option>
+                                <option v-for="user in users" :key="user.id" :value="user.id" class="bg-slate-900 text-slate-100 font-medium py-2 hover:bg-slate-800">
+                                    {{ user.nome }} ({{ user.tipo === 'TECNICO' ? 'Técnico' : 'Cliente' }})
+                                </option>
+                            </select>
+                        </div>
+
+                        <!-- Ticket Title -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Título do Problema</label>
+                            <input type="text" v-model="newTicket.titulo" placeholder="Ex: Erro de VT-x na inicialização do VirtualBox" 
+                                   class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-white font-medium focus:outline-none focus:border-teal-500/50 transition placeholder-slate-600">
+                        </div>
+
+                        <!-- Ticket Description -->
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-400 mb-1.5">Descrição Detalhada</label>
+                            <textarea v-model="newTicket.descricao" rows="4" placeholder="Descreva detalhadamente o sintoma do problema ocorrido..." 
+                                      class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-2 text-sm text-white font-medium focus:outline-none focus:border-teal-500/50 transition placeholder-slate-600"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pt-4">
+                    <button @click="submitTicket" :disabled="isAnalyzing || !newTicket.clienteId || !newTicket.titulo"
+                            class="w-full py-3.5 px-4 rounded-lg bg-gradient-to-r from-teal-500 to-indigo-600 font-bold text-sm hover:from-teal-400 hover:to-indigo-500 transition shadow-lg shadow-teal-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                        <i v-if="isAnalyzing" class="animate-spin" data-lucide="loader"></i>
+                        <i v-else data-lucide="zap"></i>
+                        {{ isAnalyzing ? 'Processando Triagem IA...' : 'Enviar e Triar com IA' }}
+                    </button>
+                </div>
+            </div>
+
+            <!-- AI Hub & Realtime outputs (Right - 7 columns) -->
+            <div class="lg:col-span-7 glass-panel p-6 flex flex-col items-center justify-between min-h-[450px]">
+                <div class="w-full flex justify-between items-center border-b border-white/5 pb-3">
+                    <h2 class="text-sm font-semibold tracking-wider uppercase text-slate-400 flex items-center gap-1.5">
+                        <i data-lucide="activity" class="text-purple-400 w-4 h-4"></i> AI Triage Hub
+                    </h2>
+                    <span class="text-[10px] bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded">Processamento Digital</span>
+                </div>
+
+                <!-- Animated Orb -->
+                <div :class="['ai-orb-container', isAnalyzing ? 'processing' : '']" class="my-6">
+                    <div class="ai-orb-glow"></div>
+                    <div class="ai-orb-ring-2"></div>
+                    <div class="ai-orb-ring"></div>
+                    <div class="ai-orb-core"></div>
+                </div>
+
+                <!-- Outputs cards grid -->
+                <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/40 border border-white/5 rounded-xl p-5">
+                    <div class="text-center">
+                        <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Categoria Estimada</div>
+                        <div class="mt-1 text-base font-bold text-teal-300 glow-text-teal">
+                            {{ lastTriagem.categoria || 'Aguardando chamados...' }}
+                        </div>
+                    </div>
+                    <div class="text-center border-t md:border-t-0 md:border-l border-white/5 pt-3 md:pt-0">
+                        <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Prioridade Estimada</div>
+                        <div class="mt-1 text-base font-bold" 
+                             :class="{'text-rose-400 glow-text-purple': lastTriagem.prioridade === 'Crítica' || lastTriagem.prioridade === 'Alta', 'text-amber-400': lastTriagem.prioridade === 'Média', 'text-emerald-400': lastTriagem.prioridade === 'Baixa', 'text-slate-500': !lastTriagem.prioridade}">
+                            {{ lastTriagem.prioridade || 'Aguardando chamados...' }}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -307,22 +399,22 @@
                 <h3 class="text-lg font-bold text-slate-200 flex items-center gap-2">
                     <i data-lucide="book-open" class="text-teal-400 w-5 h-5"></i> Cadastrar Artigo RAG
                 </h3>
-                <p class="text-xs text-slate-400">Insira artigos na base de conhecimento para que a IA possa gerar respostas automatizadas relevantes aos novos chamados.</p>
+                <p class="text-xs text-slate-400 font-medium">Cadastre artigos válidos para a sincronização de soluções automáticas do RAG (Nível 1).</p>
                 <div class="space-y-3">
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">TÃ­tulo do Artigo</label>
-                        <input type="text" v-model="newArticle.titulo" placeholder="Ex: Rede VirtualBox"
-                               class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-teal-500/50">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Título do Artigo</label>
+                        <input type="text" v-model="newArticle.titulo" placeholder="Ex: Virtualização e VT-x"
+                               class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-teal-500/50">
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">ConteÃºdo</label>
-                        <textarea v-model="newArticle.conteudo" rows="4" placeholder="Descreva a soluÃ§Ã£o..."
-                                  class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-teal-500/50"></textarea>
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Conteúdo da Resolução</label>
+                        <textarea v-model="newArticle.conteudo" rows="4" placeholder="Descreva detalhadamente a resolução do problem..."
+                                  class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-teal-500/50"></textarea>
                     </div>
                     <div>
-                        <label class="block text-xs font-semibold text-slate-400 mb-1">Palavras-Chave</label>
-                        <input type="text" v-model="newArticle.palavrasChave" placeholder="Ex: VirtualBox, rede"
-                               class="w-full bg-slate-900 border border-white/10 rounded-lg px-3 py-2 text-sm text-slate-300 focus:outline-none focus:border-teal-500/50">
+                        <label class="block text-xs font-semibold text-slate-400 mb-1">Palavras-Chave (Separadas por vírgula)</label>
+                        <input type="text" v-model="newArticle.palavrasChave" placeholder="Ex: VirtualBox, rede, VT-x, BIOS"
+                               class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 focus:outline-none focus:border-teal-500/50">
                     </div>
                 </div>
                 <div class="flex justify-end gap-2 pt-2">
@@ -337,10 +429,12 @@
             </div>
         </div>
 
-    </div>    <!-- Vue 3 Global Build CDN -->
+    </div>
+
+    <!-- Vue 3 Global Build CDN -->
     <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
     <script>
-        const { createApp, ref, onMounted, nextTick } = Vue;
+        const { createApp, ref, computed, onMounted, nextTick } = Vue;
 
         createApp({
             setup() {
@@ -364,6 +458,10 @@
                 const showArticleModal = ref(false);
                 const newArticle = ref({ titulo: '', conteudo: '', palavrasChave: '' });
 
+                const activeTab = ref('tickets');
+                const filterText = ref('');
+                const filterStatus = ref('TODOS');
+
                 const loadUsers = async () => {
                     try {
                         const res = await fetch('/api/usuarios');
@@ -371,7 +469,7 @@
                         users.value = data;
                         technicians.value = data.filter(u => u.tipo === 'TECNICO');
                     } catch (err) {
-                        console.error(err);
+                        console.error("Erro ao carregar usuários:", err);
                     }
                 };
 
@@ -380,9 +478,26 @@
                         const res = await fetch('/api/tickets');
                         tickets.value = await res.json();
                     } catch (err) {
-                        console.error(err);
+                        console.error("Erro ao carregar chamados:", err);
                     }
                 };
+
+                const filteredTickets = computed(() => {
+                    let result = tickets.value;
+                    if (filterStatus.value !== 'TODOS') {
+                        result = result.filter(t => t.status === filterStatus.value);
+                    }
+                    if (filterText.value.trim() !== '') {
+                        const query = filterText.value.toLowerCase();
+                        result = result.filter(t => 
+                            t.titulo.toLowerCase().includes(query) || 
+                            t.descricao.toLowerCase().includes(query) ||
+                            (t.cliente && t.cliente.nome.toLowerCase().includes(query)) ||
+                            (t.categoria && t.categoria.toLowerCase().includes(query))
+                        );
+                    }
+                    return result.sort((a, b) => b.id - a.id);
+                });
 
                 const selectTicket = async (ticket) => {
                     selectedTicket.value = ticket;
@@ -406,7 +521,7 @@
                         const res = await fetch(`/api/tickets/${ticketId}/interacoes`);
                         interactions.value = await res.json();
                     } catch (err) {
-                        console.error(err);
+                        console.error("Erro ao carregar interações:", err);
                     }
                 };
 
@@ -426,16 +541,23 @@
                         });
                         
                         const ticket = await res.json();
+                        
                         lastTriagem.value = {
                             categoria: ticket.categoria,
                             prioridade: ticket.prioridade
                         };
                         
                         await loadTickets();
-                        await selectTicket(ticket);
-                        newTicket.value = { clienteId: newTicket.value.clienteId, titulo: '', descricao: '' };
+                        
+                        // Esperar 2 segundos para o usuário ver a triagem de IA acontecendo no orb central!
+                        setTimeout(async () => {
+                            activeTab.value = 'tickets';
+                            await selectTicket(ticket);
+                            newTicket.value = { clienteId: newTicket.value.clienteId, titulo: '', descricao: '' };
+                        }, 2000);
+                        
                     } catch (err) {
-                        console.error(err);
+                        console.error("Erro ao criar ticket:", err);
                     } finally {
                         isAnalyzing.value = false;
                         nextTick(() => { lucide.createIcons(); });
@@ -457,7 +579,7 @@
                             await loadInteractions(selectedTicket.value.id);
                         }
                     } catch (err) {
-                        console.error(err);
+                        console.error("Erro ao enviar mensagem:", err);
                     }
                 };
 
@@ -476,7 +598,7 @@
                             await loadTickets();
                         }
                     } catch (err) {
-                        console.error(err);
+                        console.error("Erro ao atribuir técnico:", err);
                     }
                 };
 
@@ -489,7 +611,7 @@
                         });
                         await loadTickets();
                     } catch (err) {
-                        console.error(err);
+                        console.error("Erro ao atualizar status:", err);
                     }
                 };
 
@@ -501,8 +623,8 @@
                         const res = await fetch(`/api/tickets/${selectedTicket.value.id}/resumo`);
                         summaryText.value = await res.text();
                     } catch (err) {
-                        console.error(err);
-                        summaryText.value = "Falha ao gerar o resumo automÃ¡tico.";
+                        console.error("Erro ao obter resumo:", err);
+                        summaryText.value = "Falha ao gerar o resumo automático de conversação.";
                     } finally {
                         isSummarizing.value = false;
                         nextTick(() => { lucide.createIcons(); });
@@ -511,61 +633,19 @@
 
                 const seedDatabase = async () => {
                     try {
-                        const userCheckRes = await fetch('/api/usuarios');
-                        const existingUsers = await userCheckRes.json();
-                        
-                        if (existingUsers.length === 0) {
-                            const mockUsers = [
-                                { nome: 'Calebe Carvalho', email: 'calebe.carvalho@synapse.com', tipo: 'CLIENTE' },
-                                { nome: 'Maria Silva', email: 'maria.silva@synapse.com', tipo: 'TECNICO' },
-                                { nome: 'Pedro Alvares', email: 'pedro.alvares@synapse.com', tipo: 'TECNICO' }
-                            ];
-                            
-                            for (const u of mockUsers) {
-                                await fetch('/api/usuarios', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify(u)
-                                });
-                            }
+                        const res = await fetch('/api/usuarios');
+                        const data = await res.json();
+                        if (data.length > 0) {
+                            alert("Banco de dados já configurado com dados estruturados na inicialização!");
+                        } else {
+                            alert("Carga de seeder automática já realizada no startup do servidor.");
                         }
-
-                        const mockArticles = [
-                            { 
-                                titulo: 'Problemas de VM e VirtualizaÃ§Ã£o VT-x no VirtualBox', 
-                                conteudo: 'Para resolver o erro de maquina virtual que nao liga no VirtualBox, acesse a BIOS de sua maquina fÃ­sica (geralmente pressionando F2, F10 ou DEL ao inicializar) e ative a configuracao Intel Virtualization Technology (VT-x) ou AMD-V. Salve e reinicie.', 
-                                palavrasChave: 'VirtualBox, maquina, virtual, BIOS, virtualizacao' 
-                            },
-                            { 
-                                titulo: 'Regras de Reserva de Equipamentos e Notebooks', 
-                                conteudo: 'Para realizar reservas de notebooks e outros equipamentos, o chamado deve ser aberto com antecedÃªncia mÃ­nima de 48 horas. Em dias de alta demanda, a prioridade da fila segue reuniÃµes de clientes corporativos.', 
-                                palavrasChave: 'reserva, notebook, equipamentos, demanda' 
-                            },
-                            {
-                                titulo: 'Sistema Fora do Ar e Portas de Firewall',
-                                conteudo: 'Quedas gerais de sistema ou problemas de acesso causados por regras de firewall bloqueando portas devem ser resolvidos reiniciando o serviÃ§o de seguranÃ§a interna e habilitando a liberaÃ§Ã£o de portas no painel de borda do firewall corporativo.',
-                                palavrasChave: 'firewall, porta, portas, fora, sistema'
-                            }
-                        ];
-
-                        for (const art of mockArticles) {
-                            await fetch('/api/artigos', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(art)
-                            });
-                        }
-
-                        alert("Dados mock populados com sucesso!");
-                        await loadUsers();
-                        await loadTickets();
                     } catch (err) {
                         console.error(err);
-                        alert("Erro ao popular dados.");
                     }
                 };
 
-                const createStateArticle = async () => {
+                const createArticle = async () => {
                     if (!newArticle.value.titulo || !newArticle.value.conteudo) return;
                     
                     try {
@@ -578,7 +658,7 @@
                         if (res.ok) {
                             showArticleModal.value = false;
                             newArticle.value = { titulo: '', conteudo: '', palavrasChave: '' };
-                            alert("Artigo salvo!");
+                            alert("Artigo salvo e indexado com sucesso na Base de Conhecimento RAG!");
                         }
                     } catch (err) {
                         console.error(err);
@@ -589,7 +669,15 @@
                     if (!dateTimeStr) return '';
                     try {
                         const date = new Date(dateTimeStr);
-                        return date.toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                        const zeroPad = (num) => String(num).padStart(2, '0');
+                        
+                        const dia = zeroPad(date.getDate());
+                        const mes = zeroPad(date.getMonth() + 1);
+                        const ano = date.getFullYear();
+                        const hora = zeroPad(date.getHours());
+                        const min = zeroPad(date.getMinutes());
+                        
+                        return `${dia}/${mes}/${ano} ${hora}:${min}`;
                     } catch (e) {
                         return dateTimeStr;
                     }
@@ -618,6 +706,11 @@
                     showArticleModal,
                     newArticle,
                     
+                    activeTab,
+                    filterText,
+                    filterStatus,
+                    filteredTickets,
+                    
                     selectTicket,
                     submitTicket,
                     sendMessage,
@@ -625,7 +718,7 @@
                     updateStatus,
                     getSummary,
                     seedDatabase,
-                    createArticle: createStateArticle,
+                    createArticle,
                     formatDateTime
                 };
             }
