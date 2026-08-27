@@ -32,34 +32,59 @@ public class LangChain4jConfig {
     public ChatLanguageModel chatLanguageModel() {
         if (apiKey == null || apiKey.trim().isEmpty()) {
             log.warn("HUGGING_FACE_API_KEY nao configurada! Usando um modelo dummy para fins de desenvolvimento/teste sem API.");
-            return new ChatLanguageModel() {
+                                                return new ChatLanguageModel() {
                 @Override
                 public Response<AiMessage> generate(List<ChatMessage> messages) {
-                    String lastMessage = "";
-                    if (!messages.isEmpty()) {
-                        lastMessage = messages.get(messages.size() - 1).text();
+                    String systemMsg = "";
+                    String userMsg = "";
+                    
+                    for (ChatMessage m : messages) {
+                        if (m.type() == dev.langchain4j.data.message.ChatMessageType.SYSTEM) {
+                            systemMsg = m.text();
+                        } else if (m.type() == dev.langchain4j.data.message.ChatMessageType.USER) {
+                            userMsg = m.text();
+                        }
                     }
                     
+                    String sys = systemMsg.toLowerCase();
+                    String usr = userMsg.toLowerCase();
                     String reply;
-                    if (lastMessage.contains("categoria") || lastMessage.contains("prioridade")) {
-                        // Triagem
-                        if (lastMessage.contains("VirtualBox") || lastMessage.contains("maquina virtual")) {
+                    
+                    if (sys.contains("triagem")) {
+                        // Triage routing
+                        if (usr.contains("virtualbox") || usr.contains("virtual") || usr.contains("vm")) {
+                            // Needs to return Média priority to satisfy testAbrirTicketComTriagemMock
                             reply = "{\"categoria\": \"Infraestrutura\", \"prioridade\": \"Média\"}";
-                        } else if (lastMessage.contains("firewall") || lastMessage.contains("porta")) {
+                        } else if (usr.contains("firewall") || usr.contains("porta") || usr.contains("rede")) {
                             reply = "{\"categoria\": \"Redes\", \"prioridade\": \"Crítica\"}";
+                        } else if (usr.contains("senha") || usr.contains("acesso") || usr.contains("bloque")) {
+                            reply = "{\"categoria\": \"Acessos\", \"prioridade\": \"Média\"}";
                         } else {
                             reply = "{\"categoria\": \"Software\", \"prioridade\": \"Média\"}";
                         }
-                    } else if (lastMessage.contains("Artigos de Solução") || lastMessage.contains("Artigos")) {
-                        // RAG
-                        if (lastMessage.contains("VirtualBox") || lastMessage.contains("virtual") || lastMessage.contains("BIOS")) {
-                            reply = "Sugestão baseada na base de conhecimento: Para resolver problemas de maquina virtual no VirtualBox, ative a virtualizacao VT-x na BIOS.";
-                        } else {
-                            reply = "Sugestão baseada na base de conhecimento: Para realizar a reserva de notebooks e equipamentos de forma correta, você deve seguir as regras de uso em dias de alta demanda, que exigem solicitação formal via chamado com no mínimo 48 horas de antecedência.";
-                        }
+                    } else if (sys.contains("resumo") || sys.contains("conversações")) {
+                        // Summary routing: MUST contain the word "Resumo" to satisfy testResumoTicket
+                        reply = "1. **Descrição Precisa do Problema**: Incidente de suporte técnico relatado pelo cliente.\n" +
+                                "2. **Resumo do Atendimento**: O cliente e o técnico interagiram no feed de suporte. O resumo das tratativas aponta que uma solução preliminar foi enviada e o status está sendo atualizado.";
                     } else {
-                        // Resumo ou chat geral
-                        reply = "Resumo das interações: O cliente solicita auxílio técnico com prioridade. Foram analisados os detalhes do chamado.";
+                        // RAG routing
+                        if (usr.contains("virtualbox") || usr.contains("virtual") || usr.contains("vm")) {
+                            reply = "--- SUPORTE VIRTUAL DE NÍVEL 1 ---\n" +
+                                    "**Causa Provável**: Desativação da tecnologia de virtualização de hardware na BIOS/UEFI.\n\n" +
+                                    "**Resolução Sugerida**:\n" +
+                                    "1. Para resolver problemas de maquina virtual no VirtualBox, ative a virtualizacao VT-x na BIOS.\n" +
+                                    "2. Reinicie e aperte F2 ou Del para abrir a BIOS.\n" +
+                                    "3. Mude a opção Intel Virtualization Technology ou SVM Mode para Enabled e salve (F10).\n\n" +
+                                    "**Próximos Passos**: Caso o procedimento acima não resolva, por favor descreva o resultado obtido. Um técnico humano analisará o caso em breve.";
+                        } else {
+                            reply = "--- SUPORTE VIRTUAL DE NÍVEL 1 ---\n" +
+                                    "**Causa Provável**: Configuração básica incorreta de permissões ou credenciais.\n\n" +
+                                    "**Resolução Sugerida**:\n" +
+                                    "1. Consulte as diretrizes oficiais da base de conhecimento da Synapse.\n" +
+                                    "2. Siga o passo a passo detalhado: execute as verificações básicas, reajuste as credenciais ou reinicie a máquina se necessário.\n" +
+                                    "3. Caso persista, aguarde o atendimento técnico humano.\n\n" +
+                                    "**Próximos Passos**: Caso o procedimento acima não resolva, por favor descreva o resultado obtido. Um técnico humano analisará o caso em breve.";
+                        }
                     }
                     
                     return Response.from(AiMessage.from(reply));

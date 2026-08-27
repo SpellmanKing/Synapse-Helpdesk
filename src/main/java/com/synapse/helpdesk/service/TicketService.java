@@ -225,4 +225,42 @@ public class TicketService {
             return "Não foi possível gerar o resumo automático. Por favor, revise as mensagens individualmente.";
         }
     }
+
+    @Transactional
+    public Ticket avaliarSolucao(Long ticketId, boolean aprovado) {
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new IllegalArgumentException("Ticket não encontrado"));
+        
+        if (aprovado) {
+            ticket.setStatus(StatusTicket.FECHADO);
+            log.info("Ticket #{} aprovado pelo cliente. Status alterado para FECHADO.", ticketId);
+            
+            // Adicionar uma interação automática do sistema
+            Usuario suporteVirtual = getOrCreateSuporteVirtual();
+            Interacao interacao = Interacao.builder()
+                    .ticket(ticket)
+                    .autor(suporteVirtual)
+                    .mensagem("Chamado finalizado e fechado com a aprovação do cliente.")
+                    .dataCriacao(LocalDateTime.now())
+                    .build();
+            interacaoRepository.save(interacao);
+        } else {
+            ticket.setStatus(StatusTicket.EM_ANDAMENTO);
+            ticket.setPrioridade("Alta"); // Elevar prioridade
+            log.info("Ticket #{} reprovado pelo cliente. Prioridade elevada para Alta.", ticketId);
+            
+            // Adicionar uma interação automática do sistema informando a reprovação
+            Usuario suporteVirtual = getOrCreateSuporteVirtual();
+            Interacao interacao = Interacao.builder()
+                    .ticket(ticket)
+                    .autor(suporteVirtual)
+                    .mensagem("Atenção: O cliente reprovou a solução proposta. O chamado permanece ativo (Em Progresso) e sua prioridade foi elevada para ALTA.")
+                    .dataCriacao(LocalDateTime.now())
+                    .build();
+            interacaoRepository.save(interacao);
+        }
+        
+        return ticketRepository.save(ticket);
+    }
+
 }

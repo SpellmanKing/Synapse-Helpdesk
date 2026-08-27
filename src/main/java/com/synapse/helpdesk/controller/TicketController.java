@@ -91,4 +91,16 @@ public class TicketController {
             return ResponseEntity.notFound().build();
         }
     }
+
+    @PutMapping("/{id}/avaliar")
+    public ResponseEntity<Ticket> avaliarSolucao(
+            @PathVariable Long id,
+            @RequestParam boolean aprovado) {
+        try {
+            return ResponseEntity.ok(ticketService.avaliarSolucao(id, aprovado));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(null);
+        }
+    }
+
 }
