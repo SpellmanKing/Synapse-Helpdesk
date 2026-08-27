@@ -81,23 +81,27 @@
                     </span>
                 </div>
 
-                <!-- Filters & Custom Modern Status Selector -->
-                <div class="flex gap-2">
+                <!-- Filters & Custom Modern Status Selector (Requirement 13) -->
+                <div class="flex gap-2 relative">
                     <div class="relative flex-1">
                         <i data-lucide="search" class="absolute left-3 top-2.5 w-4 h-4 text-slate-500"></i>
                         <input type="text" v-model="filterText" placeholder="Buscar chamados..."
                                class="w-full bg-slate-900/60 border border-white/10 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-300 focus:outline-none focus:border-teal-500/50 placeholder-slate-600">
                     </div>
+                    
+                    <!-- Custom Select Dropdown -->
                     <div class="relative w-36">
-                        <select v-model="filterStatus" class="w-full appearance-none bg-slate-900 border border-slate-700/60 rounded-lg pl-3 pr-8 py-2 text-xs text-slate-300 focus:outline-none focus:border-teal-500/50 cursor-pointer">
-                            <option value="TODOS" class="bg-slate-900 text-slate-100">Todos</option>
-                            <option value="ABERTO" class="bg-slate-900 text-slate-100">Abertos</option>
-                            <option value="EM_ANDAMENTO" class="bg-slate-900 text-slate-100">Em Progresso</option>
-                            <option value="RESOLVIDO" class="bg-slate-900 text-slate-100">Resolvidos</option>
-                            <option value="FECHADO" class="bg-slate-900 text-slate-100">Fechados</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
-                            <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                        <button @click="filterStatusDropdownOpen = !filterStatusDropdownOpen" 
+                                class="w-full bg-slate-900 border border-slate-700/60 rounded-lg px-3 py-2 text-xs text-slate-300 flex justify-between items-center cursor-pointer hover:border-slate-500 transition">
+                            <span>{{ getStatusLabel(filterStatus) }}</span>
+                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                        </button>
+                        <div v-if="filterStatusDropdownOpen" class="custom-select-menu absolute right-0 mt-1.5 w-full bg-slate-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+                            <div v-for="opt in ['TODOS', 'ABERTO', 'EM_ANDAMENTO', 'RESOLVIDO', 'FECHADO']" :key="opt"
+                                 @click="filterStatus = opt; filterStatusDropdownOpen = false"
+                                 class="px-3 py-2 text-xs text-slate-300 hover:bg-indigo-600 hover:text-white cursor-pointer transition">
+                                {{ getStatusLabel(opt) }}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -115,7 +119,7 @@
                                            t.status === 'EM_ANDAMENTO' ? 'bg-amber-500/10 text-amber-300 border-amber-500/20' : 
                                            t.status === 'RESOLVIDO' ? 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20' :
                                            'bg-emerald-500/10 text-emerald-300 border-emerald-500/20']">
-                                {{ t.status === 'EM_ANDAMENTO' ? 'Em Progresso' : t.status === 'RESOLVIDO' ? 'Resolvido' : t.status === 'FECHADO' ? 'Fechado' : t.status }}
+                                {{ getStatusLabel(t.status) }}
                             </span>
                         </div>
 
@@ -167,36 +171,27 @@
                                     <h3 class="text-lg font-bold text-slate-100">{{ selectedTicket.titulo }}</h3>
                                 </div>
 
-                                <!-- Actions with Modern Selects -->
-                                <div class="flex flex-wrap items-center gap-2">
-                                    <!-- Technician Assignment Selection -->
-                                    <div v-if="!selectedTicket.tecnico" class="relative">
-                                        <select @change="assignTechnician($event.target.value)" 
-                                                class="appearance-none bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer">
-                                            <option value="">Atribuir Técnico...</option>
-                                            <option v-for="user in technicians" :key="user.id" :value="user.id" class="bg-slate-900 text-slate-100">
-                                                {{ user.nome }}
-                                            </option>
-                                        </select>
-                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-                                            <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
-                                        </div>
-                                    </div>
-                                    <div v-else class="text-xs px-2.5 py-1.5 bg-indigo-500/10 border border-indigo-500/30 rounded-lg text-indigo-300 font-semibold flex items-center gap-1.5">
+                                <!-- Actions with Modern Selects (Requirement 13) -->
+                                <div class="flex flex-wrap items-center gap-2 relative">
+                                    
+                                    <!-- Display label if technician exists, selection is now visual (PS5 section below) -->
+                                    <div v-if="selectedTicket.tecnico" class="text-xs px-2.5 py-1.5 bg-indigo-500/10 border border-indigo-500/30 rounded-lg text-indigo-300 font-semibold flex items-center gap-1.5">
                                         <i data-lucide="user" class="w-3.5 h-3.5"></i> Técnico: {{ selectedTicket.tecnico.nome }}
                                     </div>
 
-                                    <!-- Status changer -->
+                                    <!-- Custom Status Dropdown selector -->
                                     <div class="relative">
-                                        <select v-model="selectedTicket.status" @change="updateStatus" 
-                                                class="appearance-none bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer">
-                                            <option value="ABERTO" class="bg-slate-900 text-slate-100">Aberto</option>
-                                            <option value="EM_ANDAMENTO" class="bg-slate-900 text-slate-100">Em Progresso</option>
-                                            <option value="RESOLVIDO" class="bg-slate-900 text-slate-100">Resolvido</option>
-                                            <option value="FECHADO" class="bg-slate-900 text-slate-100">Fechado</option>
-                                        </select>
-                                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-400">
-                                            <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                                        <button @click="ticketStatusDropdownOpen = !ticketStatusDropdownOpen" 
+                                                class="bg-slate-900 border border-slate-700 rounded-lg pl-3 pr-8 py-1.5 text-xs text-slate-200 flex items-center justify-between gap-1 cursor-pointer">
+                                            <span>{{ getStatusLabel(selectedTicket.status) }}</span>
+                                            <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                                        </button>
+                                        <div v-if="ticketStatusDropdownOpen" class="custom-select-menu absolute right-0 mt-1 w-36 bg-slate-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+                                            <div v-for="st in ['ABERTO', 'EM_ANDAMENTO', 'RESOLVIDO', 'FECHADO']" :key="st"
+                                                 @click="selectedTicket.status = st; ticketStatusDropdownOpen = false; updateStatus()"
+                                                 class="px-3 py-2 text-xs text-slate-300 hover:bg-indigo-600 hover:text-white cursor-pointer transition">
+                                                {{ getStatusLabel(st) }}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -221,7 +216,7 @@
                                 </div>
                                 <div>
                                     <span class="text-[10px] text-slate-500 uppercase font-semibold">Status</span>
-                                    <div class="text-xs font-bold text-slate-300 mt-0.5">{{ selectedTicket.status }}</div>
+                                    <div class="text-xs font-bold text-slate-300 mt-0.5">{{ getStatusLabel(selectedTicket.status) }}</div>
                                 </div>
                             </div>
                         </div>
@@ -247,7 +242,7 @@
                             </div>
                         </div>
 
-                        <!-- HIGH PROMINENCE SUMMARY AREA (Requirement 8 - Repositioned here) -->
+                        <!-- HIGH PROMINENCE SUMMARY AREA (Requirement 8) -->
                         <div class="glass-panel p-5 border-l-4 border-l-purple-500 bg-gradient-to-r from-purple-500/5 to-transparent relative overflow-hidden">
                             <div class="absolute -right-4 -bottom-4 w-32 h-32 bg-purple-500/10 rounded-full blur-2xl"></div>
                             <div class="flex justify-between items-start mb-2">
@@ -263,6 +258,26 @@
                             <div class="text-xs text-slate-300 leading-relaxed font-medium space-y-2 whitespace-pre-line">
                                 <p v-if="summaryText">{{ summaryText }}</p>
                                 <p v-else class="text-slate-500 italic">Resumo automático do chamado pendente. Clique no botão ao lado para sintetizar a conversa.</p>
+                            </div>
+                        </div>
+
+                        <!-- PS5 STYLE TECHNICIAN SELECTION ANIMATION (Requirement 14) -->
+                        <div class="space-y-2 mt-2 pt-2">
+                            <h4 class="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
+                                <i data-lucide="users" class="w-4 h-4 text-indigo-400"></i> Atribuir Técnico Responsável (Estilo PS5)
+                            </h4>
+                            <div class="flex gap-4 overflow-x-auto py-2 pr-1 scrollbar-thin">
+                                <div v-for="tech in technicians" :key="tech.id" 
+                                     @click="assignTechnician(tech.id)"
+                                     :class="['ps5-card flex flex-col items-center justify-center p-3.5 rounded-2xl bg-slate-900/40 cursor-pointer w-24 text-center select-none shrink-0', 
+                                              selectedTicket.tecnico && selectedTicket.tecnico.id === tech.id ? 'active' : '']">
+                                    <div class="w-11 h-11 rounded-full bg-slate-800 border border-white/10 flex items-center justify-center text-sm font-bold text-slate-300 shadow-md transition duration-300"
+                                         :class="selectedTicket.tecnico && selectedTicket.tecnico.id === tech.id ? 'bg-teal-500 text-slate-900' : ''">
+                                        {{ tech.nome.charAt(0) }}
+                                    </div>
+                                    <span class="text-[9px] font-bold text-slate-200 mt-2 truncate w-full">{{ tech.nome }}</span>
+                                    <span class="text-[7px] text-slate-500 uppercase tracking-wider mt-0.5">TÉCNICO</span>
+                                </div>
                             </div>
                         </div>
 
@@ -307,19 +322,28 @@
                             </div>
                         </div>
 
-                        <!-- Typing area with Modern Select -->
+                        <!-- Typing area with Custom select component (Requirement 13) -->
                         <div class="flex gap-2 border-t border-white/5 pt-4">
                             <input type="text" v-model="newMessage" @keyup.enter="sendMessage" placeholder="Digite uma resposta..."
                                    class="flex-1 bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500/50">
                             
-                            <!-- Toggle who is responding -->
+                            <!-- Toggle who is responding custom dropdown -->
                             <div class="relative w-40">
-                                <select v-model="activeAuthorId" class="w-full appearance-none bg-slate-900 border border-slate-700/80 rounded-lg pl-3 pr-8 py-2 text-xs text-slate-400 focus:outline-none cursor-pointer">
-                                    <option :value="selectedTicket.cliente.id">Como Cliente</option>
-                                    <option v-if="selectedTicket.tecnico" :value="selectedTicket.tecnico.id">Como Técnico</option>
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-slate-400">
-                                    <i data-lucide="chevron-down" class="w-3.5 h-3.5"></i>
+                                <button @click="authorDropdownOpen = !authorDropdownOpen" 
+                                        class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-300 flex justify-between items-center cursor-pointer hover:border-slate-500">
+                                    <span>{{ activeAuthorId === selectedTicket.cliente.id ? 'Como Cliente' : 'Como Técnico' }}</span>
+                                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400"></i>
+                                </button>
+                                <div v-if="authorDropdownOpen" class="custom-select-menu absolute bottom-full mb-1.5 left-0 w-full bg-slate-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden">
+                                    <div @click="activeAuthorId = selectedTicket.cliente.id; authorDropdownOpen = false"
+                                         class="px-3 py-2 text-xs text-slate-300 hover:bg-indigo-600 hover:text-white cursor-pointer transition">
+                                        Como Cliente
+                                    </div>
+                                    <div v-if="selectedTicket.tecnico" 
+                                         @click="activeAuthorId = selectedTicket.tecnico.id; authorDropdownOpen = false"
+                                         class="px-3 py-2 text-xs text-slate-300 hover:bg-indigo-600 hover:text-white cursor-pointer transition">
+                                        Como Técnico
+                                    </div>
                                 </div>
                             </div>
 
@@ -355,19 +379,22 @@
                     </div>
 
                     <div class="space-y-4">
-                        <!-- High Contrast Modern Client select dropdown (Requirement 9 & 4) -->
-                        <div>
+                        <!-- High Contrast Custom select dropdown (Requirement 13 & 4) -->
+                        <div class="relative">
                             <label class="block text-xs font-semibold text-slate-400 mb-1.5">Usuário Solicitante</label>
-                            <div class="relative">
-                                <select v-model="newTicket.clienteId" 
-                                        class="w-full appearance-none bg-slate-900 border border-slate-700/80 rounded-lg pl-3 pr-10 py-2.5 text-sm text-white font-medium focus:outline-none focus:border-teal-500/50 focus:ring-1 focus:ring-teal-500/50 transition cursor-pointer">
-                                    <option :value="null" disabled class="bg-slate-900 text-slate-400 font-medium">Selecione um usuário...</option>
-                                    <option v-for="user in users" :key="user.id" :value="user.id" class="bg-slate-900 text-slate-100 font-medium py-2">
-                                        {{ user.nome }} ({{ user.tipo === 'TECNICO' ? 'Técnico' : 'Cliente' }})
-                                    </option>
-                                </select>
-                                <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5 text-slate-400">
-                                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                            
+                            <button @click="clientDropdownOpen = !clientDropdownOpen" 
+                                    class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-3 py-2.5 text-sm text-white font-medium flex justify-between items-center cursor-pointer hover:border-slate-500 transition">
+                                <span>{{ selectedClientLabel }}</span>
+                                <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400"></i>
+                            </button>
+                            
+                            <div v-if="clientDropdownOpen" class="custom-select-menu absolute left-0 w-full mt-1.5 bg-slate-900 border border-white/10 rounded-lg shadow-xl z-50 overflow-hidden max-h-48 overflow-y-auto">
+                                <div v-for="user in users" :key="user.id"
+                                     @click="newTicket.clienteId = user.id; clientDropdownOpen = false"
+                                     class="px-3 py-2.5 text-sm text-slate-300 hover:bg-indigo-600 hover:text-white cursor-pointer transition flex justify-between items-center">
+                                    <span>{{ user.nome }}</span>
+                                    <span class="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-slate-400 font-bold uppercase">{{ user.tipo === 'TECNICO' ? 'Técnico' : 'Cliente' }}</span>
                                 </div>
                             </div>
                         </div>
@@ -398,38 +425,113 @@
                 </div>
             </div>
 
-            <!-- AI Hub & Realtime outputs (Right - 7 columns) -->
+            <!-- AI TRIAGE HUB / TICKET ANALYTICS (Requirement 12 - Live Update Triage Hub) -->
             <div class="lg:col-span-7 glass-panel p-6 flex flex-col items-center justify-between min-h-[450px]">
+                
+                <!-- TOP HEADER -->
                 <div class="w-full flex justify-between items-center border-b border-white/5 pb-3">
                     <h2 class="text-sm font-semibold tracking-wider uppercase text-slate-400 flex items-center gap-1.5">
-                        <i data-lucide="activity" class="text-purple-400 w-4 h-4"></i> AI Triage Hub
+                        <i data-lucide="activity" class="text-purple-400 w-4 h-4"></i> AI Triage & Analytics Hub
                     </h2>
-                    <span class="text-[10px] bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded">Processamento Digital</span>
+                    <span class="text-[10px] bg-purple-500/10 text-purple-300 border border-purple-500/20 px-2 py-0.5 rounded">Live Update</span>
                 </div>
 
-                <!-- Animated Orb (Requirement 6 - Stays processing while true) -->
-                <div :class="['ai-orb-container', isAnalyzing ? 'processing' : '']" class="my-6">
-                    <div class="ai-orb-glow"></div>
-                    <div class="ai-orb-ring-2"></div>
-                    <div class="ai-orb-ring"></div>
-                    <div class="ai-orb-core"></div>
+                <!-- DYNAMIC DISPLAY: TRIAGE MODAL vs ANALYTICS DASHBOARD -->
+                
+                <!-- Scenario A: Triage Processing Mode (Orb & Triaged details) -->
+                <div v-if="isAnalyzing || lastTriagem.categoria" class="w-full flex flex-col items-center justify-center py-6 space-y-6">
+                    <div :class="['ai-orb-container', isAnalyzing ? 'processing' : '']">
+                        <div class="ai-orb-glow"></div>
+                        <div class="ai-orb-ring-2"></div>
+                        <div class="ai-orb-ring"></div>
+                        <div class="ai-orb-core"></div>
+                    </div>
+                    
+                    <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/40 border border-white/5 rounded-xl p-5">
+                        <div class="text-center">
+                            <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Categoria Estimada</div>
+                            <div class="mt-1 text-base font-bold text-teal-300 glow-text-teal">
+                                {{ lastTriagem.categoria || 'Analisando...' }}
+                            </div>
+                        </div>
+                        <div class="text-center border-t md:border-t-0 md:border-l border-white/5 pt-3 md:pt-0">
+                            <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Prioridade Estimada</div>
+                            <div class="mt-1 text-base font-bold" 
+                                 :class="{'text-rose-400 glow-text-purple': lastTriagem.prioridade === 'Crítica' || lastTriagem.prioridade === 'Alta', 'text-amber-400': lastTriagem.prioridade === 'Média', 'text-emerald-400': lastTriagem.prioridade === 'Baixa', 'text-slate-500': !lastTriagem.prioridade}">
+                                {{ lastTriagem.prioridade || 'Analisando...' }}
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Outputs cards grid -->
-                <div class="w-full grid grid-cols-1 md:grid-cols-2 gap-4 bg-slate-900/40 border border-white/5 rounded-xl p-5">
-                    <div class="text-center">
-                        <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider font-semibold">Categoria Estimada</div>
-                        <div class="mt-1 text-base font-bold text-teal-300 glow-text-teal">
-                            {{ lastTriagem.categoria || 'Aguardando chamados...' }}
+                <!-- Scenario B: Live Dashboard Mode (Requirement 12 - Live statistics from database) -->
+                <div v-else class="w-full grid grid-cols-1 md:grid-cols-2 gap-6 p-2 py-4">
+                    
+                    <!-- LEFT COLUMN: Ticket counts and Categoria bars -->
+                    <div class="space-y-4">
+                        <div class="p-4 bg-slate-900/50 border border-white/5 rounded-xl flex justify-between items-center relative overflow-hidden">
+                            <div class="absolute right-2 -bottom-2 w-16 h-16 text-indigo-500/10">
+                                <i data-lucide="ticket" class="w-full h-full"></i>
+                            </div>
+                            <div>
+                                <span class="text-[10px] uppercase font-bold text-slate-500 tracking-wider">Total de Chamados</span>
+                                <div class="text-3xl font-extrabold text-white mt-1">{{ stats.total }}</div>
+                            </div>
+                            <span class="text-[9px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded font-bold">Ativo</span>
+                        </div>
+
+                        <div class="p-4 bg-slate-900/30 border border-white/5 rounded-xl space-y-3">
+                            <h4 class="text-[10px] uppercase font-bold text-slate-400 tracking-wider border-b border-white/5 pb-2">Distribuição por Categoria</h4>
+                            <div class="space-y-2">
+                                <div v-for="(count, cat) in stats.byCategory" :key="cat" class="space-y-1">
+                                    <div class="flex justify-between text-[10px] text-slate-300">
+                                        <span>{{ cat }}</span>
+                                        <span class="font-bold">{{ count }}</span>
+                                    </div>
+                                    <div class="w-full bg-slate-950 rounded-full h-1.5 overflow-hidden">
+                                        <div class="bg-gradient-to-r from-teal-400 to-indigo-500 h-1.5 rounded-full transition-all duration-500"
+                                             :style="{ width: (stats.total > 0 ? (count / stats.total) * 100 : 0) + '%' }"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <div class="text-center border-t md:border-t-0 md:border-l border-white/5 pt-3 md:pt-0">
-                        <div class="text-[10px] uppercase font-bold text-slate-500 tracking-wider font-semibold">Prioridade Estimada</div>
-                        <div class="mt-1 text-base font-bold" 
-                             :class="{'text-rose-400 glow-text-purple': lastTriagem.prioridade === 'Crítica' || lastTriagem.prioridade === 'Alta', 'text-amber-400': lastTriagem.prioridade === 'Média', 'text-emerald-400': lastTriagem.prioridade === 'Baixa', 'text-slate-500': !lastTriagem.prioridade}">
-                            {{ lastTriagem.prioridade || 'Aguardando chamados...' }}
+
+                    <!-- RIGHT COLUMN: Priority meters and Status indicators -->
+                    <div class="space-y-4">
+                        <div class="p-4 bg-slate-900/30 border border-white/5 rounded-xl space-y-3">
+                            <h4 class="text-[10px] uppercase font-bold text-slate-400 tracking-wider border-b border-white/5 pb-2">Distribuição por Prioridade</h4>
+                            <div class="grid grid-cols-2 gap-2 text-center">
+                                <div v-for="(count, prio) in stats.byPriority" :key="prio" 
+                                     class="p-2 bg-slate-950/60 border border-white/5 rounded-lg">
+                                    <span class="text-[8px] font-bold uppercase tracking-wider block"
+                                          :class="{'text-rose-400': prio === 'Crítica' || prio === 'Alta', 'text-amber-400': prio === 'Média', 'text-emerald-400': prio === 'Baixa'}">
+                                        {{ prio }}
+                                    </span>
+                                    <span class="text-base font-extrabold text-white">{{ count }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="p-4 bg-slate-900/30 border border-white/5 rounded-xl space-y-3">
+                            <h4 class="text-[10px] uppercase font-bold text-slate-400 tracking-wider border-b border-white/5 pb-2">Status dos Atendimentos</h4>
+                            <div class="grid grid-cols-2 gap-2">
+                                <div v-for="(count, status) in stats.byStatus" :key="status" class="flex justify-between items-center text-[10px]">
+                                    <span class="text-slate-400 flex items-center gap-1">
+                                        <span class="w-1.5 h-1.5 rounded-full"
+                                              :class="{'bg-sky-400': status === 'ABERTO', 'bg-amber-400': status === 'EM_ANDAMENTO', 'bg-indigo-400': status === 'RESOLVIDO', 'bg-emerald-400': status === 'FECHADO'}"></span>
+                                        {{ getStatusLabel(status) }}
+                                    </span>
+                                    <span class="font-bold text-slate-200">{{ count }}</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
+                </div>
+
+                <!-- BOTTOM CAPTION -->
+                <div class="w-full text-center text-[9px] text-slate-600 italic">
+                    * O painel recarrega automaticamente de forma assíncrona a cada 5 segundos.
                 </div>
             </div>
 
@@ -474,7 +576,7 @@
             </div>
         </div>
 
-        <!-- SYSTEM CONFIRMATION DIALOG MODAL (Requirement 10) -->
+        <!-- SYSTEM CONFIRMATION DIALOG MODAL (Requirement 15 & 10) -->
         <div v-if="feedbackModal.show" class="fixed inset-0 bg-black/75 backdrop-blur-md z-50 flex items-center justify-center p-4">
             <div class="glass-panel w-full max-w-sm p-6 text-center space-y-4 border border-white/10 relative animate-fade-in">
                 <div class="mx-auto w-12 h-12 rounded-full flex items-center justify-center"
@@ -489,8 +591,8 @@
                         {{ feedbackModal.message }}
                     </p>
                 </div>
-                <button @click="feedbackModal.show = false" 
-                        class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-lg border border-white/5 transition">
+                <button @click="closeFeedbackModal" 
+                        class="w-full py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-lg border border-white/5 transition cursor-pointer">
                     Confirmar
                 </button>
             </div>
@@ -529,7 +631,13 @@
                 const filterText = ref('');
                 const filterStatus = ref('TODOS');
 
-                // Confirmation modal state
+                // Custom Select Dropdown toggles (Requirement 13)
+                const clientDropdownOpen = ref(false);
+                const filterStatusDropdownOpen = ref(false);
+                const ticketStatusDropdownOpen = ref(false);
+                const authorDropdownOpen = ref(false);
+
+                // Confirmation modal state (Requirement 15 & 10)
                 const feedbackModal = ref({ show: false, success: true, message: '' });
 
                 const loadUsers = async () => {
@@ -552,7 +660,6 @@
                         if (selectedTicket.value) {
                             const updated = tickets.value.find(t => t.id === selectedTicket.value.id);
                             if (updated) {
-                                // Sync metadata but don't disrupt active selections
                                 selectedTicket.value.status = updated.status;
                                 selectedTicket.value.prioridade = updated.prioridade;
                                 selectedTicket.value.categoria = updated.categoria;
@@ -563,6 +670,33 @@
                         console.error("Erro ao carregar chamados:", err);
                     }
                 };
+
+                // Requirement 12 - Dynamic live statistics calculations
+                const stats = computed(() => {
+                    const total = tickets.value.length;
+                    const byCategory = { 'Software': 0, 'Hardware': 0, 'Redes': 0, 'Infraestrutura': 0, 'Acessos': 0 };
+                    const byPriority = { 'Crítica': 0, 'Alta': 0, 'Média': 0, 'Baixa': 0 };
+                    const byStatus = { 'ABERTO': 0, 'EM_ANDAMENTO': 0, 'RESOLVIDO': 0, 'FECHADO': 0 };
+                    
+                    tickets.value.forEach(t => {
+                        const cat = t.categoria || 'Software';
+                        if (byCategory[cat] !== undefined) byCategory[cat]++;
+                        
+                        const prio = t.prioridade || 'Média';
+                        if (byPriority[prio] !== undefined) byPriority[prio]++;
+                        
+                        const st = t.status || 'ABERTO';
+                        if (byStatus[st] !== undefined) byStatus[st]++;
+                    });
+                    
+                    return { total, byCategory, byPriority, byStatus };
+                });
+
+                const selectedClientLabel = computed(() => {
+                    if (newTicket.value.clienteId === null) return "Selecione um usuário...";
+                    const found = users.value.find(u => u.id === newTicket.value.clienteId);
+                    return found ? `${found.nome} (${found.tipo === 'TECNICO' ? 'Técnico' : 'Cliente'})` : "Selecione um usuário...";
+                });
 
                 const filteredTickets = computed(() => {
                     let result = tickets.value;
@@ -599,7 +733,7 @@
                         ragSuggestion.value = '';
                     }
                     
-                    nextTick(() => { lucide.createIcons(); });
+                    nextTick(() => { try { lucide.createIcons(); } catch(e) {} });
                 };
 
                 const loadInteractions = async (ticketId) => {
@@ -627,12 +761,11 @@
                         });
                         
                         if (!res.ok) {
-                            throw new Error("Resposta inválida do servidor de aplicação.");
+                            throw new Error("Conexão com a API de backend falhou.");
                         }
 
                         const ticket = await res.json();
                         
-                        // Populate results
                         lastTriagem.value = {
                             categoria: ticket.categoria,
                             prioridade: ticket.prioridade
@@ -640,35 +773,45 @@
                         
                         await loadTickets();
                         
-                        // Esperar 2 segundos para o usuário ver a triagem de IA acontecendo no orb central! (isAnalyzing remains true)
+                        // Keep isAnalyzing true for 2.2 seconds to show off the visual AI hub triaging
                         setTimeout(async () => {
-                            isAnalyzing.value = false; // Turn off loading state after 2 seconds
-                            activeTab.value = 'tickets';
-                            await selectTicket(ticket);
+                            isAnalyzing.value = false;
                             
-                            // Clear form fields
-                            newTicket.value = { clienteId: newTicket.value.clienteId, titulo: '', descricao: '' };
-                            
-                            // Display successful dialog confirmation
+                            // Display successful dialog confirmation modal
                             feedbackModal.value = {
                                 show: true,
                                 success: true,
-                                message: `Chamado #${ticket.id} aberto! Categoria: ${ticket.categoria} | Prioridade: ${ticket.prioridade}.`
+                                message: `O chamado #${ticket.id} foi aberto e triado como Categoria "${ticket.categoria}" e Prioridade "${ticket.prioridade}".`
                             };
-                            nextTick(() => { lucide.createIcons(); });
-                        }, 2000);
+                            
+                            // Switch tab and select ticket
+                            activeTab.value = 'tickets';
+                            await selectTicket(ticket);
+                            
+                            // Clear form title/desc
+                            newTicket.value.titulo = '';
+                            newTicket.value.descricao = '';
+                            
+                            nextTick(() => { try { lucide.createIcons(); } catch(e) {} });
+                        }, 2200);
                         
                     } catch (err) {
                         isAnalyzing.value = false;
-                        console.error("Erro ao criar ticket:", err);
+                        console.error("Erro ao criar chamado:", err);
                         
                         feedbackModal.value = {
                             show: true,
                             success: false,
-                            message: "Não foi possível abrir o seu chamado: " + (err.message || "Conexão rejeitada pelo servidor.")
+                            message: "Não foi possível abrir o seu chamado: " + (err.message || "Erro de rede com o servidor.")
                         };
-                        nextTick(() => { lucide.createIcons(); });
+                        nextTick(() => { try { lucide.createIcons(); } catch(e) {} });
                     }
+                };
+
+                const closeFeedbackModal = () => {
+                    feedbackModal.value.show = false;
+                    // Clear the triage results once modal is closed, to return to live dashboard!
+                    lastTriagem.value = { categoria: '', prioridade: '' };
                 };
 
                 const sendMessage = async () => {
@@ -722,7 +865,6 @@
                     }
                 };
 
-                // Customer Satisfaction Approval/Rejection (Requirement 11)
                 const avaliarChamado = async (aprovado) => {
                     if (!selectedTicket.value) return;
                     
@@ -736,12 +878,11 @@
                             selectedTicket.value.status = ticket.status;
                             selectedTicket.value.prioridade = ticket.prioridade;
                             
-                            // Reload data
                             await loadTickets();
                             await loadInteractions(ticket.id);
                             
                             const msg = aprovado 
-                                ? "Solução de chamado aprovada! Chamado finalizado definitivamente." 
+                                ? "Solução de chamado aprovada! Chamado finalizado definitivamente como FECHADO." 
                                 : "Solução reprovada! O chamado foi reaberto e a prioridade foi elevada para ALTA.";
                                 
                             feedbackModal.value = { show: true, success: aprovado, message: msg };
@@ -763,7 +904,7 @@
                         summaryText.value = "Falha ao gerar o resumo automático de conversação.";
                     } finally {
                         isSummarizing.value = false;
-                        nextTick(() => { lucide.createIcons(); });
+                        nextTick(() => { try { lucide.createIcons(); } catch(e) {} });
                     }
                 };
 
@@ -801,6 +942,17 @@
                     }
                 };
 
+                const getStatusLabel = (st) => {
+                    const labels = {
+                        'TODOS': 'Todos',
+                        'ABERTO': 'Aberto',
+                        'EM_ANDAMENTO': 'Em Progresso',
+                        'RESOLVIDO': 'Resolvido',
+                        'FECHADO': 'Fechado'
+                    };
+                    return labels[st] || st;
+                };
+
                 const formatDateTime = (dateTimeStr) => {
                     if (!dateTimeStr) return '';
                     try {
@@ -831,7 +983,7 @@
                         }
                     }, 5000);
                     
-                    lucide.createIcons();
+                    nextTick(() => { try { lucide.createIcons(); } catch(e) {} });
                 });
 
                 return {
@@ -857,9 +1009,18 @@
                     filterStatus,
                     filteredTickets,
                     feedbackModal,
+                    stats,
+                    selectedClientLabel,
+                    
+                    // Dropdowns toggle states
+                    clientDropdownOpen,
+                    filterStatusDropdownOpen,
+                    ticketStatusDropdownOpen,
+                    authorDropdownOpen,
                     
                     selectTicket,
                     submitTicket,
+                    closeFeedbackModal,
                     sendMessage,
                     assignTechnician,
                     updateStatus,
@@ -867,7 +1028,8 @@
                     getSummary,
                     seedDatabase,
                     createArticle,
-                    formatDateTime
+                    formatDateTime,
+                    getStatusLabel
                 };
             }
         }).mount('#app');
